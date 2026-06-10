@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContactFlow - Premium Address Book</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090a10;
+            --card: rgba(22, 24, 38, 0.7);
+            --border: rgba(255,255,255,0.06);
+            --primary: #f59e0b;
+            --primary-glow: rgba(245, 158, 11, 0.15);
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body {
+            background-color: var(--bg); color: var(--text); min-height: 100vh;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .container {
+            width: 100%; max-width: 460px; background: var(--card); border: 1px solid var(--border);
+            border-radius: 28px; padding: 32px; backdrop-filter: blur(16px);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+        }
+        h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; text-align: center; background: linear-gradient(135deg, #fde68a, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.subtitle { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+        input {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 14px; color: white; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); }
+        .btn {
+            background: var(--primary); color: white; border: none; border-radius: 12px;
+            padding: 12px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--primary-glow); }
+        .search-box { margin-bottom: 20px; }
+        .contact-list { list-style: none; display: flex; flex-direction: column; gap: 12px; max-height: 240px; overflow-y: auto; }
+        .contact-item {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .info { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--primary);
+            display: flex; justify-content: center; align-items: center; font-weight: 600; color: white;
+        }
+        .details h4 { font-size: 15px; font-weight: 600; }
+        .details p { font-size: 12px; color: var(--text-muted); }
+        .delete-btn { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ContactFlow</h1>
+        <p class="subtitle">Premium Address Book</p>
+        
+        <div class="form">
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="text" id="phone" placeholder="Phone Number">
+            <button class="btn" id="add-btn">Add Contact</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Search contacts...">
+        </div>
+
+        <ul class="contact-list" id="list"></ul>
+    </div>
+    <script>
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        const searchInput = document.getElementById('search');
+        const addBtn = document.getElementById('add-btn');
+        const list = document.getElementById('list');
+
+        let contacts = JSON.parse(localStorage.getItem('contactflow_contacts')) || [
+            { name: "John Doe", phone: "+1 555-0199" },
+            { name: "Jane Smith", phone: "+1 555-0144" }
+        ];
+
+        function save() { localStorage.setItem('contactflow_contacts', JSON.stringify(contacts)); render(); }
+
+        function render() {
+            const query = searchInput.value.toLowerCase();
+            list.innerHTML = '';
+            contacts
+                .filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query))
+                .forEach((c, idx) => {
+                    const item = document.createElement('li');
+                    item.className = 'contact-item';
+                    const initial = c.name.charAt(0).toUpperCase();
+                    item.innerHTML = `
+                        <div class="info">
+                            <div class="avatar">${initial}</div>
+                            <div class="details">
+                                <h4>${c.name}</h4>
+                                <p>${c.phone}</p>
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="remove(${idx})">✕</button>
+                    `;
+                    list.appendChild(item);
+                });
+        }
+
+        function remove(idx) { contacts.splice(idx, 1); save(); }
+
+        addBtn.onclick = () => {
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            if (name && phone) {
+                contacts.push({ name, phone });
+                nameInput.value = '';
+                phoneInput.value = '';
+                save();
+            }
+        };
+
+        searchInput.oninput = render;
+        render();
+    </script>
+</body>
+</html>
